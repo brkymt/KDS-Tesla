@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KDS - Modern Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo-container">
+                <img src="images/tesla-logo.png" alt="Tesla Logo" class="tesla-logo">
+            </div>
+            <ul class="menu">
+                <li><a href="dashboard.html"><i class="fas fa-tachometer-alt"></i><span class="menu-text">Dashboard</span></a></li>
+                <li><a href="kullanici.html"><i class="fas fa-users"></i><span class="menu-text">Müşteriler</span></a></li>
+                <li><a href="analiz.html"><i class="fas fa-chart-bar"></i><span class="menu-text">Analitik</span></a></li>
+                <li><a href="satis.html"><i class="fas fa-car"></i><span class="menu-text">Araçlar</span></a></li>
+                <li><a href="tahminleme.html" class="active"><i class="fas fa-chart-line"></i><span class="menu-text">Satış</span></a></li>
+                <li><a href="istasyon.html"><i class="fas fa-charging-station"></i><span class="menu-text">İstasyonlar</span></a></li>
+            </ul>
+            <ul class="settings">
+                <li><a href="#"><i class="fas fa-cog"></i><span class="menu-text">Ayarlar</span></a></li>
+            </ul>
+            <ul class="logout">
+                <li><a href="#" id="logout-button"><i class="fas fa-power-off"></i><span class="menu-text">Çıkış</span></a></li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <header class="main-header">
+                <p>Araç Satış Rakamları (2023-2024)</p>
+            </header>
+            <div class="content-container">
+                <div class="stats-cards">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-arrow-trend-up"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Toplam Satış 2024</h3>
+                            <p class="stat-value">1,580</p>
+                            <p class="stat-change positive">+12.5% geçen yıla göre</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Aylık Ortalama</h3>
+                            <p class="stat-value">197.5</p>
+                            <p class="stat-change positive">+8.2% artış</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>En Yüksek Ay</h3>
+                            <p class="stat-value">225</p>
+                            <p>Temmuz 2024</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="sales-grid">
+                    <div class="chart-section">
+                        <div class="chart-header">
+                            <h2>Satış Trendi</h2>
+                            <div class="chart-legend">
+                                <span class="legend-item">
+                                    <span class="legend-color" style="background: #00ff88"></span>
+                                    2023
+                                </span>
+                                <span class="legend-item">
+                                    <span class="legend-color" style="background: #4d7cff"></span>
+                                    2024
+                                </span>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="salesChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table id="salesTable">
+                            <thead>
+                                <tr>
+                                    <th>Ay</th>
+                                    <th>2023 Satış</th>
+                                    <th>2024 Satış</th>
+                                    <th>Değişim %</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- JavaScript ile doldurulacak -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .content-container {
+            padding: 20px;
+            height: calc(100vh - 80px);
+            overflow: auto;
+        }
+
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #2d1c77, #1a1053);
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            color: white;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            animation: slideIn 0.5s ease-out forwards;
+            opacity: 0;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(232, 33, 39, 0.15);
+        }
+
+        .stat-icon {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+        }
+
+        .stat-icon i {
+            font-size: 24px;
+            color: #00ff88;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover .stat-icon i {
+            transform: scale(1.2);
+        }
+
+        .stat-info h3 {
+            font-size: 14px;
+            margin: 0;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 5px 0;
+        }
+
+        .stat-change {
+            font-size: 12px;
+            margin: 0;
+        }
+
+        .stat-change.positive {
+            color: #00ff88;
+        }
+
+        .sales-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr; /* Chart ve tablo oranını değiştir */
+            gap: 20px;
+            height: calc(100vh - 280px); /* Stats cards'ı hesaba katarak yüksekliği ayarla */
+            max-height: 700px; /* Maximum yükseklik eklendi */
+            min-height: 500px; /* Minimum yükseklik eklendi */
+        }
+
+        .chart-section {
+            background: linear-gradient(135deg, #2d1c77, #1a1053);
+            border-radius: 15px;
+            padding: 20px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            max-height: 100%; /* Maximum yükseklik sınırı */
+            overflow: hidden; /* Taşmaları engelle */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .chart-section:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(232, 33, 39, 0.15);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .chart-header h2 {
+            font-size: 18px;
+            margin: 0;
+        }
+
+        .chart-legend {
+            display: flex;
+            gap: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        .chart-container {
+            flex: 1;
+            min-height: 400px; /* Minimum yükseklik */
+            position: relative;
+            padding: 10px;
+            height: calc(100% - 60px); /* Header yüksekliğini çıkar */
+            max-height: calc(100% - 60px);
+            overflow: hidden; /* Taşmaları engelle */
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .table-container {
+            background: linear-gradient(135deg, #2d1c77, #1a1053);
+            padding: 25px;
+            border-radius: 15px;
+            overflow: auto;
+            max-height: 100%;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            height: 100%; /* Sabit yükseklik */
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .table-container:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(232, 33, 39, 0.15);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            color: white;
+            font-size: 14px;
+            height: 100%; /* Tablo yüksekliğini container'a göre ayarla */
+        }
+
+        thead {
+            background: rgba(255, 255, 255, 0.1);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+            padding: 15px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background: linear-gradient(135deg, #2d1c77, #1a1053);
+        }
+
+        tbody {
+            overflow-y: auto;
+            height: calc(100% - 50px); /* Header yüksekliğini çıkar */
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transition: background 0.2s ease;
+        }
+
+        td:first-child {
+            font-weight: 500;
+        }
+
+        .positive-change {
+            color: #00ff88;
+            font-weight: 600;
+        }
+
+        .negative-change {
+            color: #ff4444;
+            font-weight: 600;
+        }
+
+        @media (max-width: 1200px) {
+            .sales-grid {
+                grid-template-columns: 1.5fr 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sales-grid {
+                grid-template-columns: 1fr;
+                height: auto;
+                max-height: none;
+            }
+
+            .chart-container {
+                min-height: 300px;
+            }
+
+            .table-container {
+                padding: 15px;
+                margin-top: 20px;
+                height: 300px; /* Mobile için sabit yükseklik */
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 10px 8px;
+            }
+
+            .chart-section {
+                height: 400px; /* Mobile için sabit yükseklik */
+            }
+        }
+
+        /* Tesla renk değişkenleri */
+        :root {
+            --tesla-red: #e82127;
+            --tesla-dark: #171a20;
+            --tesla-light: #f5f5f5;
+            --tesla-hover: rgba(232, 33, 39, 0.1);
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--tesla-dark), #1a1f25);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(232, 33, 39, 0.15);
+        }
+
+        .stat-icon i {
+            color: var(--tesla-red);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover .stat-icon i {
+            transform: scale(1.2);
+        }
+
+        .chart-section {
+            background: linear-gradient(135deg, var(--tesla-dark), #1a1f25);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .chart-section:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(232, 33, 39, 0.15);
+        }
+
+        .table-container {
+            background: linear-gradient(135deg, var(--tesla-dark), #1a1f25);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .table-container:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(232, 33, 39, 0.15);
+        }
+
+        .legend-color[style*="00ff88"] {
+            background: var(--tesla-red) !important;
+        }
+
+        .legend-color[style*="4d7cff"] {
+            background: var(--tesla-light) !important;
+        }
+
+        tr:hover {
+            background: var(--tesla-hover);
+            transform: translateX(5px);
+            transition: all 0.3s ease;
+        }
+
+        .positive-change {
+            color: var(--tesla-red);
+            animation: pulseText 2s infinite;
+        }
+
+        @keyframes pulseText {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        /* Yeni animasyonlar */
+        .chart-container {
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stat-card {
+            animation: slideIn 0.5s ease-out forwards;
+            opacity: 0;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .stat-card:nth-child(1) { animation-delay: 0.1s; }
+        .stat-card:nth-child(2) { animation-delay: 0.2s; }
+        .stat-card:nth-child(3) { animation-delay: 0.3s; }
+
+        /* Script güncelleme için stil değişiklikleri */
+        .table-container tbody tr {
+            animation: fadeIn 0.5s ease-out forwards;
+            opacity: 0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+
+    <script>
+        const salesData = {
+            months: ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 
+                    'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'],
+            // 2023: Toplam 15,000 araç
+            sales2023: [1050, 1150, 1250, 1200, 1300, 1350, 1400, 1350, 1300, 1250, 1150, 1250],
+            // 2024: Toplam 18,000 araç
+            sales2024: [1250, 1350, 1500, 1450, 1600, 1650, 1700, 1650, 1550, 1500, 1450, 1350]
+        };
+
+        function createTable() {
+            const tbody = document.querySelector('#salesTable tbody');
+            tbody.innerHTML = '';
+
+            salesData.months.forEach((month, index) => {
+                const sales2023 = salesData.sales2023[index];
+                const sales2024 = salesData.sales2024[index];
+                const change = sales2024 ? ((sales2024 - sales2023) / sales2023 * 100).toFixed(1) : '-';
+                
+                const row = `
+                    <tr>
+                        <td>${month}</td>
+                        <td>${sales2023.toLocaleString()}</td>
+                        <td>${sales2024 ? sales2024.toLocaleString() : '-'}</td>
+                        <td class="${change > 0 ? 'positive-change' : 'negative-change'}">
+                            ${change !== '-' ? `${change > 0 ? '+' : ''}${change}%` : '-'}
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function createChart() {
+            const ctx = document.getElementById('salesChart').getContext('2d');
+            
+            const gradient1 = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient1.addColorStop(0, 'rgba(232, 33, 39, 0.2)'); // Tesla red
+            gradient1.addColorStop(1, 'rgba(232, 33, 39, 0)');
+            
+            const gradient2 = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient2.addColorStop(0, 'rgba(245, 245, 245, 0.2)'); // Tesla light
+            gradient2.addColorStop(1, 'rgba(245, 245, 245, 0)');
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: salesData.months,
+                    datasets: [{
+                        label: '2023',
+                        data: salesData.sales2023,
+                        borderColor: '#e82127', // Tesla red
+                        backgroundColor: gradient1,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        fill: true,
+                        pointBackgroundColor: '#00ff88',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }, {
+                        label: '2024',
+                        data: salesData.sales2024,
+                        borderColor: '#f5f5f5', // Tesla light
+                        backgroundColor: gradient2,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        fill: true,
+                        pointBackgroundColor: '#4d7cff',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            titleColor: '#1a1053',
+                            bodyColor: '#1a1053',
+                            borderColor: 'rgba(255, 255, 255, 0.1)',
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return `Satış: ${context.raw}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            min: 1000, // Minimum değer
+                            max: 2000, // Maximum değer
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                stepSize: 200, // Adım büyüklüğü
+                                color: 'rgba(255, 255, 255, 0.8)',
+                                padding: 10,
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.8)',
+                                padding: 10,
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 2000,
+                        easing: 'easeInOutQuart'
+                    }
+                }
+            });
+        }
+
+        // Tablo satırları için animasyon
+        function animateTableRows() {
+            const rows = document.querySelectorAll('#salesTable tbody tr');
+            rows.forEach((row, index) => {
+                row.style.animationDelay = `${index * 0.1}s`;
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Toplam satış kartını güncelle
+            const totalSales2024 = salesData.sales2024.reduce((a, b) => a + b, 0);
+            const totalSales2023 = salesData.sales2023.reduce((a, b) => a + b, 0);
+            const yearlyChange = ((totalSales2024 - totalSales2023) / totalSales2023 * 100).toFixed(1);
+            
+            document.querySelector('.stat-card:nth-child(1) .stat-value').textContent = totalSales2024.toLocaleString();
+            document.querySelector('.stat-card:nth-child(1) .stat-change').textContent = `+${yearlyChange}% geçen yıla göre`;
+
+            // Aylık ortalama kartını güncelle
+            const avgSales2024 = (totalSales2024 / 12).toFixed(1);
+            document.querySelector('.stat-card:nth-child(2) .stat-value').textContent = avgSales2024;
+
+            // En yüksek ay kartını güncelle
+            const maxSale2024 = Math.max(...salesData.sales2024);
+            const maxMonth = salesData.months[salesData.sales2024.indexOf(maxSale2024)];
+            document.querySelector('.stat-card:nth-child(3) .stat-value').textContent = maxSale2024.toLocaleString();
+            document.querySelector('.stat-card:nth-child(3) p:last-child').textContent = maxMonth + ' 2024';
+
+            createTable();
+            createChart();
+            animateTableRows();
+        });
+
+        document.getElementById('logout-button').addEventListener('click', () => {
+            if (confirm('Çıkış yapmak istediğinizden emin misiniz?')) {
+                window.location.href = '/';
+            }
+        });
+    </script>
+</body>
+</html>

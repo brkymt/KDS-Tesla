@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KDS - Modern Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/dashboard.css">
+    <style>
+        /* ...existing CSS... */
+
+        /* New styles for tables and charts */
+        .table-container {
+            background: linear-gradient(145deg, #1f2229, #171a20);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-top: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .table-header h2 {
+            font-size: 1.4rem;
+            color: #fff;
+            margin: 0;
+        }
+
+        .table-header select {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .table-header select:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--tesla-red);
+        }
+
+        .request-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 0.5rem;
+        }
+
+        .request-table th {
+            background: transparent;
+            color: #9f9f9f;
+            font-weight: 500;
+            padding: 1rem;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .request-table td {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .request-table tr:hover td {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .request-table tr td:first-child {
+            border-radius: 10px 0 0 10px;
+        }
+
+        .request-table tr td:last-child {
+            border-radius: 0 10px 10px 0;
+        }
+
+        .chart-container {
+            background: linear-gradient(145deg, #1f2229, #171a20);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin: 2rem auto;
+            width: 100%; /* Changed from max-width */
+            height: 400px; /* Added fixed height */
+            position: relative; /* Added for proper chart sizing */
+            backdrop-filter: blur(10px);
+        }
+
+        .chart-wrapper {
+            width: 100%;
+            height: calc(100% - 70px); /* Subtract header height */
+            position: relative;
+        }
+
+        @media (max-width: 1200px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 300px;
+            }
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .chart-header h2 {
+            font-size: 1.4rem;
+            color: #fff;
+            margin: 0;
+        }
+
+        .chart-header select {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .chart-header select:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--tesla-red);
+        }
+
+        canvas {
+            margin-top: 1rem;
+            border-radius: 10px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(145deg, #1f2229, #171a20);
+            border-radius: 20px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(232, 33, 39, 0.3);
+        }
+
+        .stat-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card-header i {
+            font-size: 1.8rem;
+            color: var(--tesla-red);
+            background: rgba(232, 33, 39, 0.1);
+            padding: 0.8rem;
+            border-radius: 12px;
+        }
+
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 600;
+            color: #fff;
+            margin: 0.5rem 0;
+        }
+
+        .stat-label {
+            color: #9f9f9f;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .table-container, .chart-container {
+                padding: 1.5rem;
+            }
+        }
+
+        /* Add these new styles */
+        .monthly-overview {
+            background: linear-gradient(145deg, #1f2229, #171a20);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-top: 2rem; /* Adjusted from 2rem auto to 2rem */
+            backdrop-filter: blur(10px);
+        }
+
+        .monthly-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .months-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .month-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .month-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .month-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 3px;
+            width: var(--progress);
+            background: linear-gradient(90deg, var(--tesla-red), #ff6b6b);
+        }
+
+        .month-name {
+            font-size: 1.2rem;
+            color: #fff;
+            margin-bottom: 1rem;
+        }
+
+        .month-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #9f9f9f;
+        }
+
+        .stat-value {
+            font-size: 1.4rem;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .trend-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .trend-up {
+            color: #00d084;
+        }
+
+        .trend-down {
+            color: var(--tesla-red);
+        }
+
+        @media (max-width: 768px) {
+            .months-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Updated monthly overview styles */
+        .monthly-overview {
+            background: linear-gradient(145deg, #1f2229, #171a20);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-top: 2rem;
+        }
+
+        .months-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); /* 4 columns for better organization */
+            gap: 1.5rem;
+        }
+
+        .month-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            min-height: 220px; /* Fixed height for consistency */
+            display: flex;
+            flex-direction: column;
+        }
+
+        .month-card.empty {
+            background: rgba(255, 255, 255, 0.01);
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 220px;
+        }
+
+        .month-card.empty span {
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 0.9rem;
+        }
+
+        .month-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .month-name {
+            font-size: 1.2rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .month-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+
+        .month-indicator.active { background: #00d084; }
+        .month-indicator.pending { background: #ffd700; }
+        .month-indicator.inactive { background: var(--tesla-red); }
+
+        .month-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: auto;
+        }
+
+        @media (max-width: 1400px) {
+            .months-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 1100px) {
+            .months-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .months-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Modern Select Box Styles */
+        .modern-select-wrapper {
+            position: relative;
+            min-width: 200px;
+        }
+
+        .modern-select {
+            appearance: none;
+            -webkit-appearance: none;
+            background: linear-gradient(145deg, #1f2229, #171a20);
+            border: 2px solid rgba(232, 33, 39, 0.1);
+            border-radius: 12px;
+            color: #fff;
+            padding: 12px 45px 12px 20px;
+            width: 100%;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .modern-select:hover {
+            border-color: var(--tesla-red);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(232, 33, 39, 0.1);
+        }
+
+        .modern-select:focus {
+            outline: none;
+            border-color: var(--tesla-red);
+            box-shadow: 0 0 0 3px rgba(232, 33, 39, 0.2);
+        }
+
+        .modern-select-wrapper::after {
+            content: '\f107';
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--tesla-red);
+            pointer-events: none;
+            transition: transform 0.3s ease;
+        }
+
+        .modern-select-wrapper:hover::after {
+            transform: translateY(-50%) translateY(2px);
+        }
+
+        .modern-select option {
+            background: #1f2229;
+            color: #fff;
+            padding: 12px;
+            font-size: 1rem;
+        }
+
+        @keyframes selectHover {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-2px); }
+            100% { transform: translateY(0); }
+        }
+
+        .modern-select-wrapper:hover .modern-select {
+            animation: selectHover 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo-container">
+                <img src="images/tesla-logo.png" alt="Tesla Logo" class="tesla-logo">
+            </div>
+            <ul class="menu">
+                <li><a href="dashboard.html"><i class="fas fa-tachometer-alt"></i><span class="menu-text">Dashboard</span></a></li>
+                <li><a href="kullanici.html" class="active"><i class="fas fa-users"></i><span class="menu-text">Müşteriler</span></a></li>
+                <li><a href="analiz.html"><i class="fas fa-chart-bar"></i><span class="menu-text">Analitik</span></a></li>
+                <li><a href="satis.html"><i class="fas fa-car"></i><span class="menu-text">Araçlar</span></a></li>
+                <li><a href="tahminleme.html"><i class="fas fa-chart-line"></i><span class="menu-text">Satış</span></a></li>
+                <li><a href="istasyon.html"><i class="fas fa-charging-station"></i><span class="menu-text">İstasyonlar</span></a></li>
+            </ul>
+            <ul class="settings">
+                <li><a href="#"><i class="fas fa-cog"></i><span class="menu-text">Ayarlar</span></a></li>
+            </ul>
+            <ul class="logout">
+                <li><a href="#" id="logout-button"><i class="fas fa-power-off"></i><span class="menu-text">Çıkış</span></a></li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <header class="main-header">
+                <h1>TESLA</h1>
+                <p>Şarj İstasyonu Talep Yönetimi</p>
+            </header>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-value">1,234</div>
+                    <div class="stat-label">Toplam Talep</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-value">856</div>
+                    <div class="stat-label">Onaylanan</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-value">378</div>
+                    <div class="stat-label">Bekleyen</div>
+                </div>
+            </div>
+
+            <div class="monthly-overview">
+                <div class="monthly-header">
+                    <h2>Aylık Talep Görünümü</h2>
+                    <div class="modern-select-wrapper">
+                        <select id="yearSelect" class="modern-select">
+                            <option value="2023">2023 Yılı</option>
+                            <option value="2024">2024 Yılı</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="months-grid" id="monthsContainer">
+                    <!-- Months will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Çıkış butonunun işlevi
+        document.getElementById('logout-button').addEventListener('click', () => {
+            if (confirm('Çıkış yapmak istediğinizden emin misiniz?')) {
+                window.location.href = '/';
+            }
+        });
+
+        // Define months array
+        const months = [
+            'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+            'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
+        ];
+
+        // Monthly data for both years
+        const monthlyData2023 = [
+            { month: 'Ocak', total: 120, approved: 80, pending: 30, rejected: 10, status: 'active' },
+            { month: 'Şubat', total: 150, approved: 100, pending: 40, rejected: 10, status: 'active' },
+            { month: 'Mart', total: 135, approved: 85, pending: 35, rejected: 15, status: 'active' },
+            { month: 'Nisan', total: 140, approved: 95, pending: 35, rejected: 10, status: 'active' },
+            { month: 'Mayıs', total: 160, approved: 110, pending: 40, rejected: 10, status: 'active' },
+            { month: 'Haziran', total: 145, approved: 90, pending: 45, rejected: 10, status: 'active' },
+            { month: 'Temmuz', total: 170, approved: 120, pending: 40, rejected: 10, status: 'active' },
+            { month: 'Ağustos', total: 155, approved: 100, pending: 45, rejected: 10, status: 'active' },
+            { month: 'Eylül', total: 165, approved: 115, pending: 40, rejected: 10, status: 'active' },
+            { month: 'Ekim', total: 175, approved: 125, pending: 40, rejected: 10, status: 'active' },
+            { month: 'Kasım', total: 180, approved: 130, pending: 40, rejected: 10, status: 'active' },
+            { month: 'Aralık', total: 190, approved: 140, pending: 40, rejected: 10, status: 'active' }
+        ];
+
+        const monthlyData2024 = [
+            { month: 'Ocak', total: 130, approved: 90, pending: 30, rejected: 10, status: 'active' },
+            { month: 'Şubat', total: 160, approved: 110, pending: 40, rejected: 10, status: 'active' },
+            { month: 'Mart', total: 145, approved: 95, pending: 35, rejected: 15, status: 'active' },
+            { month: 'Nisan', total: 155, approved: 105, pending: 38, rejected: 12, status: 'active' },
+            { month: 'Mayıs', total: 175, approved: 120, pending: 42, rejected: 13, status: 'active' },
+            { month: 'Haziran', total: 185, approved: 130, pending: 45, rejected: 10, status: 'active' },
+            { month: 'Temmuz', total: 195, approved: 140, pending: 43, rejected: 12, status: 'active' },
+            { month: 'Ağustos', total: 200, approved: 145, pending: 44, rejected: 11, status: 'active' },
+            { month: 'Eylül', total: 210, approved: 150, pending: 47, rejected: 13, status: 'active' },
+            { month: 'Ekim', total: 220, approved: 160, pending: 48, rejected: 12, status: 'active' },
+            { month: 'Kasım', total: 230, approved: 165, pending: 50, rejected: 15, status: 'active' },
+            { month: 'Aralık', total: 240, approved: 170, pending: 55, rejected: 15, status: 'active' }
+        ];
+
+        // Enhanced renderMonthlyOverview function
+        function renderMonthlyOverview(year) {
+            const container = document.getElementById('monthsContainer');
+            container.innerHTML = '';
+            const data = year === '2023' ? monthlyData2023 : monthlyData2024;
+
+            months.forEach((month, index) => {
+                const monthData = data[index];
+                const monthCard = document.createElement('div');
+                
+                if (!monthData || monthData.status === 'inactive') {
+                    monthCard.className = 'month-card empty';
+                    monthCard.innerHTML = `<span>${month} - Veri Yok</span>`;
+                } else {
+                    const progress = monthData.total ? (monthData.approved / monthData.total) * 100 : 0;
+                    monthCard.className = 'month-card';
+                    monthCard.style.setProperty('--progress', `${progress}%`);
+                    
+                    monthCard.innerHTML = `
+                        <div class="month-header">
+                            <h3 class="month-name">
+                                <span class="month-indicator ${monthData.status}"></span>
+                                ${month}
+                            </h3>
+                        </div>
+                        <div class="month-stats">
+                            <div class="stat-item">
+                                <span class="stat-label">Toplam Talep</span>
+                                <span class="stat-value">${monthData.total || 0}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Onaylanan</span>
+                                <span class="stat-value">${monthData.approved || 0}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Bekleyen</span>
+                                <span class="stat-value">${monthData.pending || 0}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Reddedilen</span>
+                                <span class="stat-value">${monthData.rejected || 0}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                container.appendChild(monthCard);
+            });
+        }
+
+        // Initial render and event listener
+        renderMonthlyOverview('2023');
+        document.getElementById('yearSelect').addEventListener('change', (e) => {
+            renderMonthlyOverview(e.target.value);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tesla Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo-container">
+                <img src="images/tesla-logo.png" alt="Tesla Logo" class="tesla-logo">
+            </div>
+            <ul class="menu">
+                <li><a href="dashboard.html" class="active"><i class="fas fa-tachometer-alt"></i><span class="menu-text">Dashboard</span></a></li>
+                <li><a href="kullanici.html"><i class="fas fa-users"></i><span class="menu-text">Müşteriler</span></a></li>
+                <li><a href="analiz.html"><i class="fas fa-chart-bar"></i><span class="menu-text">Analitik</span></a></li>
+                <li><a href="satis.html"><i class="fas fa-car"></i><span class="menu-text">Araçlar</span></a></li>
+                <li><a href="tahminleme.html"><i class="fas fa-chart-line"></i><span class="menu-text">Satış</span></a></li>
+                <li><a href="istasyon.html"><i class="fas fa-charging-station"></i><span class="menu-text">İstasyonlar</span></a></li>
+            </ul>
+            <ul class="settings">
+                <li><a href="#"><i class="fas fa-cog"></i><span class="menu-text">Ayarlar</span></a></li>
+            </ul>
+            <ul class="logout">
+                <li><a href="#" id="logout-button"><i class="fas fa-power-off"></i><span class="menu-text">Çıkış</span></a></li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <header class="main-header">
+                <div class="header-content">
+                    <h1>TESLA</h1>
+                    <p>Dashboard</p>
+                </div>
+                <div class="date-time">
+                    <span id="current-time"></span>
+                </div>
+            </header>
+            
+            <div class="dashboard-grid">
+                <!-- Quick Stats Row -->
+                <div class="stats-container">
+                    <div class="metric-card primary">
+                        <i class="fas fa-charging-station"></i>
+                        <div class="metric-info">
+                            <h3>Aktif Şarj İstasyonları</h3>
+                            <p class="metric-value">13</p>
+                            <span class="trend positive">+5% ↑</span>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card success">
+                        <i class="fas fa-car"></i>
+                        <div class="metric-info">
+                            <h3>Toplam Araç Satışı</h3>
+                            <p class="metric-value">18,000</p>
+                            <span class="trend positive">+12% ↑</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card warning">
+                        <i class="fas fa-store"></i>
+                        <div class="metric-info">
+                            <h3>Aktif Bayiler</h3>
+                            <p class="metric-value">2</p>
+                            <span class="trend neutral">±0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Grid -->
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Şarj İstasyonu Kullanımı</h3>
+                        </div>
+                        <canvas id="chargingStationChart"></canvas>
+                    </div>
+
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Model Bazlı Satış</h3>
+                        </div>
+                        <canvas id="salesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('logout-button').addEventListener('click', () => {
+            if (confirm('Çıkış yapmak istediğinizden emin misiniz?')) {
+                window.location.href = '/';
+            }
+        });
+
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('current-time').textContent = 
+                now.toLocaleDateString('tr-TR') + ' ' + 
+                now.toLocaleTimeString('tr-TR');
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // Charts initialization
+        const chargingCtx = document.getElementById('chargingStationChart').getContext('2d');
+        
+        // Şarj istasyonu kullanım verilerini API'den çek
+        fetch('/api/sarj-kullanim')
+            .then(response => response.json())
+            .then(data => {
+                new Chart(chargingCtx, {
+                    type: 'line',
+                    data: {
+                        labels: data.map(item => item.ay_id),
+                        datasets: [{
+                            label: 'Günlük Şarj Sayısı',
+                            data: data.map(item => item.kullanim_miktari),
+                            borderColor: '#e82127',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => console.error('Şarj istasyonu verisi çekme hatası:', error));
+
+        const salesCtx = document.getElementById('salesChart').getContext('2d');
+        
+        // Model bazlı satış verilerini API'den çek
+        fetch('/api/model-bazli-satis')
+            .then(response => response.json())
+            .then(data => {
+                new Chart(salesCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.map(item => item.model_adi),
+                        datasets: [{
+                            label: 'Satış Adedi',
+                            data: data.map(item => item.satis_sayisi),
+                            backgroundColor: '#e82127'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => console.error('Veri çekme hatası:', error));
+        
+    </script>
+</body>
+</html>

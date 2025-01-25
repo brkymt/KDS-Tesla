@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KDS - Modern Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .vehicle-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            padding: 1rem;
+        }
+
+        .vehicle-card {
+            background: rgba(23, 23, 23, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: transform 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            animation: fadeInUp 0.6s ease-out;
+            background: linear-gradient(
+                to bottom,
+                rgba(23, 23, 23, 0.9),
+                rgba(23, 23, 23, 0.95)
+            );
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .vehicle-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, rgba(232, 33, 39, 0.1), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .vehicle-card:hover::before {
+            opacity: 1;
+        }
+
+        .vehicle-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(232, 33, 39, 0.2);
+        }
+
+        .vehicle-image {
+            width: 100%;
+            height: 180px;
+            object-fit: contain; /* changed from cover to contain */
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            transition: transform 0.5s ease;
+            mix-blend-mode: luminosity; /* adds a nice blend effect */
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+            padding: 1rem; /* adds some spacing around the image */
+            background: transparent; /* ensures background is transparent */
+        }
+
+        .vehicle-card:hover .vehicle-image {
+            transform: scale(1.05) translateY(-5px);
+            filter: drop-shadow(0 8px 12px rgba(232, 33, 39, 0.2));
+            mix-blend-mode: normal;
+        }
+
+        .vehicle-info h3 {
+            color: #fff;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .specs-list {
+            list-style: none;
+            padding: 0;
+            margin: 1rem 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem 0;
+        }
+
+        .specs-list li {
+            display: flex;
+            justify-content: space-between;
+            color: #999;
+            margin: 0.5rem 0;
+            font-size: 0.9rem;
+        }
+
+        .specs-list li span:last-child {
+            color: #e82127;
+            font-weight: 500;
+        }
+
+        .charging-info {
+            background: rgba(232, 33, 39, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
+        .charging-info h4 {
+            color: #e82127;
+            margin-bottom: 0.5rem;
+        }
+
+        .charging-info p {
+            color: #999;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.active {
+            opacity: 1;
+        }
+
+        .modal-content {
+            position: relative;
+            background: #171a20;
+            width: 90%;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 2rem;
+            border-radius: 12px;
+            transform: translateY(-50px);
+            transition: transform 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            color: #fff;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+
+        .close-modal:hover {
+            opacity: 1;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .tesla-loader {
+            width: 50px;
+            height: 50px;
+            border: 3px solid transparent;
+            border-top-color: #e82127;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .prediction-section {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .prediction-section h3 {
+            color: #e82127;
+            margin-bottom: 1rem;
+        }
+
+        .prediction-controls {
+            margin-bottom: 1.5rem;
+        }
+
+        .prediction-controls select {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #predictionChart {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+            border-radius: 8px;
+            max-height: 300px;
+        }
+
+        .total-sales-section {
+            margin: 2rem;
+            padding: 2rem;
+            background: rgba(23, 23, 23, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 60vh; /* Ekran yüksekliğinin %60'ı kadar */
+            min-height: 400px;
+            margin: 2rem 0;
+        }
+
+        #totalPredictionChart {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            width: 100% !important;
+            height: 100% !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo-container">
+                <img src="images/tesla-logo.png" alt="Tesla Logo" class="tesla-logo">
+            </div>
+            <ul class="menu">
+                <li><a href="dashboard.html"><i class="fas fa-tachometer-alt"></i><span class="menu-text">Dashboard</span></a></li>
+                <li><a href="kullanici.html"><i class="fas fa-users"></i><span class="menu-text">Müşteriler</span></a></li>
+                <li><a href="analiz.html"><i class="fas fa-chart-bar"></i><span class="menu-text">Analitik</span></a></li>
+                <li><a href="satis.html" class="active"><i class="fas fa-car"></i><span class="menu-text">Araçlar</span></a></li>
+                <li><a href="tahminleme.html"><i class="fas fa-chart-line"></i><span class="menu-text">Satış</span></a></li>
+                <li><a href="istasyon.html"><i class="fas fa-charging-station"></i><span class="menu-text">İstasyonlar</span></a></li>
+            </ul>
+            <ul class="settings">
+                <li><a href="#"><i class="fas fa-cog"></i><span class="menu-text">Ayarlar</span></a></li>
+            </ul>
+            <ul class="logout">
+                <li><a href="#" id="logout-button"><i class="fas fa-power-off"></i><span class="menu-text">Çıkış</span></a></li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <header class="main-header">
+                <h1>Tesla Araç Modelleri</h1>
+                <p>Şarj İstasyonu Gereksinimleri</p>
+            </header>
+            
+            <div class="vehicle-grid">
+                <div class="vehicle-card">
+                    
+                    <div class="vehicle-info">
+                        <h3>Model S</h3>
+                        <ul class="specs-list">
+                            <li><span>Menzil</span><span>600 km</span></li>
+                            <li><span>Batarya</span><span>100 kWh</span></li>
+                            <li><span>Şarj Süresi (Supercharger)</span><span>30 dk</span></li>
+                            <li><span>Maksimum Şarj Gücü</span><span>250 kW</span></li>
+                        </ul>
+                        <div class="charging-info">
+                            <h4>Şarj İstasyonu Gereksinimleri</h4>
+                            <p>Supercharger V3 uyumlu, minimum 250 kW DC hızlı şarj desteği</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="vehicle-card">
+                    
+                    <div class="vehicle-info">
+                        <h3>Model 3</h3>
+                        <ul class="specs-list">
+                            <li><span>Menzil</span><span>510 km</span></li>
+                            <li><span>Batarya</span><span>82 kWh</span></li>
+                            <li><span>Şarj Süresi (Supercharger)</span><span>25 dk</span></li>
+                            <li><span>Maksimum Şarj Gücü</span><span>250 kW</span></li>
+                        </ul>
+                        <div class="charging-info">
+                            <h4>Şarj İstasyonu Gereksinimleri</h4>
+                            <p>Supercharger V3 uyumlu, minimum 200 kW DC hızlı şarj desteği</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="vehicle-card">
+                    
+                    <div class="vehicle-info">
+                        <h3>Model X</h3>
+                        <ul class="specs-list">
+                            <li><span>Menzil</span><span>560 km</span></li>
+                            <li><span>Batarya</span><span>100 kWh</span></li>
+                            <li><span>Şarj Süresi (Supercharger)</span><span>35 dk</span></li>
+                            <li><span>Maksimum Şarj Gücü</span><span>250 kW</span></li>
+                        </ul>
+                        <div class="charging-info">
+                            <h4>Şarj İstasyonu Gereksinimleri</h4>
+                            <p>Supercharger V3 uyumlu, minimum 250 kW DC hızlı şarj desteği</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Add this section before the closing main-content div -->
+            <div class="total-sales-section">
+                <h2>Toplam Satış Tahmini</h2>
+                <div class="prediction-controls">
+                    <select id="totalPredictionPeriod">
+                        <option value="6">Gelecek 6 Ay</option>
+                        <option value="12">Gelecek 1 Yıl</option>
+                    </select>
+                </div>
+                <div class="chart-container">
+                    <canvas id="totalPredictionChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="vehicleModal">
+        <div class="modal-content">
+            <button class="close-modal">&times;</button>
+            <div id="modalContent"></div>
+            <div class="prediction-section">
+                <h3>Satış Tahminleri</h3>
+                <div class="prediction-controls">
+                    <select id="predictionPeriod">
+                        <option value="6">Gelecek 6 Ay</option>
+                        <option value="12">Gelecek 1 Yıl</option>
+                    </select>
+                </div>
+                <canvas id="predictionChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="tesla-loader"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let currentPredictionChart = null;
+            const modal = document.getElementById('vehicleModal');
+            const modalContent = document.getElementById('modalContent');
+            const cards = document.querySelectorAll('.vehicle-card');
+
+            // Simulate loading
+            setTimeout(() => {
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }, 1000);
+
+            // Stagger card animations
+            cards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.2}s`;
+            });
+
+            // Modal functionality
+            cards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const vehicleModel = card.querySelector('h3').textContent;
+                    const content = card.innerHTML;
+                    modalContent.innerHTML = content;
+                    modal.style.display = 'block';
+                    setTimeout(() => modal.classList.add('active'), 10);
+                    
+                    // Generate prediction chart
+                    generatePredictionChart(vehicleModel);
+                });
+            });
+
+            document.querySelector('.close-modal').addEventListener('click', () => {
+                modal.classList.remove('active');
+                setTimeout(() => modal.style.display = 'none', 300);
+            });
+
+            // Interactive specs display
+            const specItems = document.querySelectorAll('.specs-list li');
+            specItems.forEach(item => {
+                item.addEventListener('mouseenter', () => {
+                    item.style.transform = 'translateX(10px)';
+                    item.style.color = '#e82127';
+                    item.style.transition = 'all 0.3s ease';
+                });
+
+                item.addEventListener('mouseleave', () => {
+                    item.style.transform = 'translateX(0)';
+                    item.style.color = '#999';
+                });
+            });
+
+            // Smooth scroll animation
+            document.querySelector('.main-content').style.scrollBehavior = 'smooth';
+
+            // Prediction period change handler
+            document.getElementById('predictionPeriod').addEventListener('change', (e) => {
+                const vehicleModel = modalContent.querySelector('h3').textContent;
+                generatePredictionChart(vehicleModel, e.target.value);
+            });
+
+            function generatePredictionChart(vehicleModel, months = 6) {
+                if (currentPredictionChart) {
+                    currentPredictionChart.destroy();
+                }
+
+                const predictionData = generatePredictionData(months);
+                const ctx = document.getElementById('predictionChart').getContext('2d');
+                
+                currentPredictionChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: predictionData.labels,
+                        datasets: [{
+                            label: `${vehicleModel} Tahmini Satış`,
+                            data: predictionData.values,
+                            borderColor: '#e82127',
+                            backgroundColor: 'rgba(232, 33, 39, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#fff'
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                },
+                                ticks: {
+                                    color: '#fff'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                },
+                                ticks: {
+                                    color: '#fff'
+                                }
+                            }
+                        },
+                        animation: {
+                            duration: 2000,
+                            easing: 'easeInOutQuart'
+                        }
+                    }
+                });
+            }
+
+            function generatePredictionData(months) {
+                const labels = [];
+                const values = [];
+                const currentDate = new Date();
+                
+                for (let i = 0; i < months; i++) {
+                    const date = new Date(currentDate);
+                    date.setMonth(currentDate.getMonth() + i);
+                    labels.push(date.toLocaleString('tr-TR', { month: 'short', year: '2-digit' }));
+                    
+                    // Generate realistic-looking prediction data
+                    const baseValue = 100;
+                    const trend = i * 5;
+                    const seasonal = Math.sin(i / 12 * Math.PI * 2) * 20;
+                    const random = Math.random() * 20 - 10;
+                    values.push(Math.max(0, Math.round(baseValue + trend + seasonal + random)));
+                }
+
+                return { labels, values };
+            }
+
+            // Add this after existing code
+            let totalSalesChart = null;
+            
+            // Initialize total sales chart
+            generateTotalSalesChart(6);
+
+            // Total sales period change handler
+            document.getElementById('totalPredictionPeriod').addEventListener('change', (e) => {
+                generateTotalSalesChart(parseInt(e.target.value));
+            });
+
+            function generateTotalSalesChart(months) {
+                if (totalSalesChart) {
+                    totalSalesChart.destroy();
+                }
+
+                const modelColors = {
+                    'Model S': {
+                        border: '#00ff00', // Parlak yeşil
+                        background: 'rgba(0, 255, 0, 0.1)'
+                    },
+                    'Model 3': {
+                        border: '#00ffff', // Cyan
+                        background: 'rgba(0, 255, 255, 0.1)'
+                    },
+                    'Model X': {
+                        border: '#ff00ff', // Magenta
+                        background: 'rgba(255, 0, 255, 0.1)'
+                    }
+                };
+
+                const models = ['Model S', 'Model 3', 'Model X'];
+                const datasets = models.map(model => {
+                    const data = generatePredictionData(months);
+                    return {
+                        label: model,
+                        data: data.values,
+                        borderColor: modelColors[model].border,
+                        backgroundColor: modelColors[model].background,
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    };
+                });
+
+                const totalData = {
+                    label: 'Toplam Satış',
+                    data: datasets[0].data.map((_, index) => 
+                        datasets.reduce((sum, dataset) => sum + dataset.data[index], 0)
+                    ),
+                    borderColor: '#e82127', // Tesla kırmızısı
+                    backgroundColor: 'rgba(232, 33, 39, 0.2)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4
+                };
+
+                const ctx = document.getElementById('totalPredictionChart').getContext('2d');
+                totalSalesChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: generatePredictionData(months).labels,
+                        datasets: [...datasets, totalData]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: { 
+                                    color: '#fff',
+                                    padding: 20,
+                                    font: {
+                                        size: 14
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                ticks: { color: '#fff' }
+                            },
+                            x: {
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                ticks: { color: '#fff' }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+
+        // Çıkış butonunun işlevi
+        document.getElementById('logout-button').addEventListener('click', () => {
+            if (confirm('Çıkış yapmak istediğinizden emin misiniz?')) {
+                window.location.href = '/';
+            }
+        });
+    </script>
+</body>
+</html>

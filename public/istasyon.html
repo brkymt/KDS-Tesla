@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KDS - Modern Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/dashboard.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .message-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: calc(100vh - 100px);
+            text-align: center;
+            color: #666;
+        }
+
+        .message-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .message-box i {
+            font-size: 3rem;
+            color: #e82127;
+            margin-bottom: 1rem;
+        }
+
+        .message-box h2 {
+            color: #fff;
+            margin-bottom: 1rem;
+        }
+
+        .message-box p {
+            color: #999;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .chart-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        .analytics-panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .recommendation-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .recommendation-item {
+            background: rgba(232, 33, 39, 0.1);
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #e82127;
+        }
+
+        .chart-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .select-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .custom-select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .custom-select:hover {
+            border-color: rgba(232, 33, 39, 0.5);
+        }
+
+        .custom-select:focus {
+            border-color: #e82127;
+            box-shadow: 0 0 0 2px rgba(232, 33, 39, 0.2);
+        }
+
+        .custom-select option {
+            background: #1a1a1a;
+            color: white;
+            padding: 10px;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            border-color: rgba(232, 33, 39, 0.3);
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .stat-trend {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+
+        .trend-up {
+            color: #4caf50;
+        }
+
+        .trend-down {
+            color: #f44336;
+        }
+
+        .chart-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(232, 33, 39, 0.1), transparent);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo-container">
+                <img src="images/tesla-logo.png" alt="Tesla Logo" class="tesla-logo">
+            </div>
+            <ul class="menu">
+                <li><a href="dashboard.html"><i class="fas fa-tachometer-alt"></i><span class="menu-text">Dashboard</span></a></li>
+                <li><a href="kullanici.html"><i class="fas fa-users"></i><span class="menu-text">Müşteriler</span></a></li>
+                <li><a href="analiz.html"><i class="fas fa-chart-bar"></i><span class="menu-text">Analitik</span></a></li>
+                <li><a href="satis.html"><i class="fas fa-car"></i><span class="menu-text">Araçlar</span></a></li>
+                <li><a href="tahminleme.html"><i class="fas fa-chart-line"></i><span class="menu-text">Satış</span></a></li>
+                <li><a href="istasyon.html" class="active"><i class="fas fa-charging-station"></i><span class="menu-text">İstasyonlar</span></a></li>
+            </ul>
+            <ul class="settings">
+                <li><a href="#"><i class="fas fa-cog"></i><span class="menu-text">Ayarlar</span></a></li>
+            </ul>
+            <ul class="logout">
+                <li><a href="#" id="logout-button"><i class="fas fa-power-off"></i><span class="menu-text">Çıkış</span></a></li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="dashboard-grid">
+                <div class="chart-section">
+                    <div class="chart-container">
+                        <h2>En Çok Satış Yapılan 7 İl</h2>
+                        <div class="chart-wrapper">
+                            <canvas id="usageChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="select-container">
+                        <select class="custom-select" id="usageFilter">
+                            <option value="2024">2024 Yılı</option>
+                            <option value="2023">2023 Yılı</option>
+                        </select>
+                    </div>
+                    <div class="stat-grid">
+                        <div class="stat-card">
+                            <div class="stat-value">32,847</div>
+                            <div class="stat-label">Toplam İstasyon</div>
+                            <div class="stat-trend">
+                                <i class="fas fa-arrow-up trend-up"></i>
+                                <span>12% artış</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">78%</div>
+                            <div class="stat-label">Doluluk Oranı</div>
+                            <div class="stat-trend">
+                                <i class="fas fa-arrow-up trend-up"></i>
+                                <span>5% artış</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">1.2M</div>
+                            <div class="stat-label">Aylık Şarj</div>
+                            <div class="stat-trend">
+                                <i class="fas fa-arrow-up trend-up"></i>
+                                <span>8% artış</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-section">
+                    <div class="chart-container">
+                        <h2>Şehir Bazlı Yıllık Karşılaştırma</h2>
+                        <div class="chart-wrapper">
+                            <canvas id="compareChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="select-container">
+                        <select class="custom-select" id="cityCompareFilter">
+                            <option value="">Şehir Seçiniz</option>
+                            <option value="İstanbul">İstanbul</option>
+                            <option value="Ankara">Ankara</option>
+                            <option value="İzmir">İzmir</option>
+                            <option value="Antalya">Antalya</option>
+                            <option value="Bursa">Bursa</option>
+                            <option value="Muğla">Muğla</option>
+                            <option value="Eskişehir">Eskişehir</option>
+                        </select>
+                    </div>
+                    <div class="stat-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="selectedCitySales">-</div>
+                            <div class="stat-label">Toplam Satış</div>
+                            <div class="stat-trend" id="salesTrend">
+                                <i class="fas fa-minus"></i>
+                                <span>Şehir seçiniz</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="yearlyGrowth">-</div>
+                            <div class="stat-label">Yıllık Büyüme</div>
+                            <div class="stat-trend" id="growthTrend">
+                                <i class="fas fa-minus"></i>
+                                <span>Şehir seçiniz</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="marketShare">-</div>
+                            <div class="stat-label">Pazar Payı</div>
+                            <div class="stat-trend" id="shareTrend">
+                                <i class="fas fa-minus"></i>
+                                <span>Şehir seçiniz</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        // Çıkış butonunun işlevi
+        document.getElementById('logout-button').addEventListener('click', () => {
+            if (confirm('Çıkış yapmak istediğinizden emin misiniz?')) {
+                window.location.href = '/';
+            }
+        });
+
+        // Top 7 şehir satış verileri
+        const cityData = {
+            2023: [
+                { city: 'İstanbul', sales: 2500 },
+                { city: 'Ankara', sales: 1800 },
+                { city: 'İzmir', sales: 1500 },
+                { city: 'Antalya', sales: 1200 },
+                { city: 'Bursa', sales: 1000 },
+                { city: 'Muğla', sales: 850 },
+                { city: 'Eskişehir', sales: 800 }
+            ],
+            2024: [
+                { city: 'İstanbul', sales: 2800 },
+                { city: 'Ankara', sales: 2000 },
+                { city: 'İzmir', sales: 1700 },
+                { city: 'Antalya', sales: 1400 },
+                { city: 'Bursa', sales: 1200 },
+                { city: 'Muğla', sales: 1000 },
+                { city: 'Eskişehir', sales: 900 }
+            ]
+        };
+
+        // İlk chart'ı oluştur
+        const usageCtx = document.getElementById('usageChart').getContext('2d');
+        const usageChart = new Chart(usageCtx, {
+            type: 'bar',
+            data: {
+                labels: cityData[2024].map(item => item.city),
+                datasets: [{
+                    label: 'Satış Adedi',
+                    data: cityData[2024].map(item => item.sales),
+                    backgroundColor: 'rgba(232, 33, 39, 0.7)',
+                    borderColor: 'rgba(232, 33, 39, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        ticks: { color: '#fff' }
+                    },
+                    x: {
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        ticks: { color: '#fff' }
+                    }
+                },
+                plugins: {
+                    legend: { labels: { color: '#fff' } }
+                }
+            }
+        });
+
+        // Karşılaştırma grafiği
+        const compareCtx = document.getElementById('compareChart').getContext('2d');
+        const compareChart = new Chart(compareCtx, {
+            type: 'bar',
+            data: {
+                labels: ['2023', '2024'],
+                datasets: [{
+                    label: 'Yıllık Satış Adedi',
+                    data: [0, 0],
+                    backgroundColor: ['rgba(75, 192, 192, 0.7)', 'rgba(232, 33, 39, 0.7)'],
+                    borderColor: ['rgba(75, 192, 192, 1)', 'rgba(232, 33, 39, 1)'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        ticks: { color: '#fff' }
+                    },
+                    x: {
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        ticks: { color: '#fff' }
+                    }
+                },
+                plugins: {
+                    legend: { labels: { color: '#fff' } },
+                    title: {
+                        display: true,
+                        color: '#fff',
+                        text: 'Şehir Seçiniz',
+                        font: { size: 16 }
+                    }
+                }
+            }
+        });
+
+        // Select box event listeners
+        document.getElementById('usageFilter').addEventListener('change', function(e) {
+            const year = parseInt(e.target.value);
+            usageChart.data.labels = cityData[year].map(item => item.city);
+            usageChart.data.datasets[0].data = cityData[year].map(item => item.sales);
+            usageChart.update();
+        });
+
+        // Şehir karşılaştırma event listener'ı
+        document.getElementById('cityCompareFilter').addEventListener('change', function(e) {
+            const selectedCity = e.target.value;
+            if (!selectedCity) return;
+
+            const city2023 = cityData[2023].find(item => item.city === selectedCity);
+            const city2024 = cityData[2024].find(item => item.city === selectedCity);
+
+            compareChart.data.datasets[0].data = [
+                city2023.sales,
+                city2024.sales
+            ];
+            compareChart.options.plugins.title.text = `${selectedCity} Satış Karşılaştırması`;
+            compareChart.update();
+        });
+
+        // Modern chart configurations
+        const modernChartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+                duration: 1000,
+                easing: 'easeInOutQuart'
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { 
+                        color: 'rgba(255, 255, 255, 0.1)',
+                        drawBorder: false
+                    },
+                    ticks: { 
+                        color: '#fff',
+                        font: {
+                            size: 12
+                        }
+                    }
+                },
+                x: {
+                    grid: { 
+                        display: false
+                    },
+                    ticks: { 
+                        color: '#fff',
+                        font: {
+                            size: 12
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: { 
+                    labels: { 
+                        color: '#fff',
+                        font: {
+                            size: 13
+                        }
+                    }
+                }
+            }
+        };
+
+        // Update existing chart configurations
+        usageChart.options = {...usageChart.options, ...modernChartOptions};
+        compareChart.options = {...compareChart.options, ...modernChartOptions};
+
+        // Update city comparison listener to include stat updates
+        document.getElementById('cityCompareFilter').addEventListener('change', function(e) {
+            const selectedCity = e.target.value;
+            if (!selectedCity) {
+                resetStats();
+                return;
+            }
+
+            const city2023 = cityData[2023].find(item => item.city === selectedCity);
+            const city2024 = cityData[2024].find(item => item.city === selectedCity);
+            const growth = ((city2024.sales - city2023.sales) / city2023.sales * 100).toFixed(1);
+            const totalSales = city2023.sales + city2024.sales;
+            const marketShare = ((totalSales / (cityData[2023].reduce((a, b) => a + b.sales, 0) + 
+                                cityData[2024].reduce((a, b) => a + b.sales, 0))) * 100).toFixed(1);
+
+            // Update chart
+            compareChart.data.datasets[0].data = [city2023.sales, city2024.sales];
+            compareChart.options.plugins.title.text = `${selectedCity} Satış Karşılaştırması`;
+            compareChart.update();
+
+            // Update stats
+            updateStats(totalSales, growth, marketShare);
+        });
+
+        function resetStats() {
+            document.getElementById('selectedCitySales').textContent = '-';
+            document.getElementById('yearlyGrowth').textContent = '-';
+            document.getElementById('marketShare').textContent = '-';
+            document.getElementById('salesTrend').innerHTML = '<i class="fas fa-minus"></i><span>Şehir seçiniz</span>';
+            document.getElementById('growthTrend').innerHTML = '<i class="fas fa-minus"></i><span>Şehir seçiniz</span>';
+            document.getElementById('shareTrend').innerHTML = '<i class="fas fa-minus"></i><span>Şehir seçiniz</span>';
+        }
+
+        function updateStats(sales, growth, share) {
+            document.getElementById('selectedCitySales').textContent = sales.toLocaleString();
+            document.getElementById('yearlyGrowth').textContent = `${growth}%`;
+            document.getElementById('marketShare').textContent = `${share}%`;
+
+            const salesTrend = document.getElementById('salesTrend');
+            const growthTrend = document.getElementById('growthTrend');
+            const shareTrend = document.getElementById('shareTrend');
+
+            salesTrend.innerHTML = `<i class="fas fa-arrow-up trend-up"></i><span>${growth}% artış</span>`;
+            growthTrend.innerHTML = `<i class="fas fa-arrow-${growth > 0 ? 'up trend-up' : 'down trend-down'}"></i><span>${growth}% ${growth > 0 ? 'artış' : 'azalış'}</span>`;
+            shareTrend.innerHTML = `<i class="fas fa-chart-pie"></i><span>Toplam paydan</span>`;
+        }
+    </script>
+</body>
+</html>
